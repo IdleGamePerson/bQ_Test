@@ -43,10 +43,19 @@ const questions = [
     }
 ];
 
-const form = document.getElementById("quizForm");
+let currentQuestionIndex = 0;
+let totalScore = 0;
+
+const questionContainer = document.getElementById("questionContainer");
+const nextBtn = document.getElementById("nextBtn");
 const resultDiv = document.getElementById("result");
 
-questions.forEach((q, index) => {
+function showQuestion(index) {
+    nextBtn.disabled = true;
+    questionContainer.innerHTML = "";
+
+    const q = questions[index];
+
     const div = document.createElement("div");
     div.classList.add("question");
 
@@ -57,7 +66,7 @@ questions.forEach((q, index) => {
     if (q.image) {
         const img = document.createElement("img");
         img.src = q.image;
-        img.alt = "Fragebild";
+        img.alt = "Bild zur Frage";
         div.appendChild(img);
     }
 
@@ -65,26 +74,35 @@ questions.forEach((q, index) => {
         const label = document.createElement("label");
         const input = document.createElement("input");
         input.type = "radio";
-        input.name = `question${index}`;
+        input.name = "answer";
         input.value = a.points;
+        input.addEventListener("change", () => {
+            nextBtn.disabled = false;
+        });
         label.appendChild(input);
         label.append(` ${a.text}`);
         div.appendChild(label);
-        div.appendChild(document.createElement("br"));
     });
 
-    form.appendChild(div);
+    questionContainer.appendChild(div);
+}
+
+nextBtn.addEventListener("click", () => {
+    const selected = document.querySelector('input[name="answer"]:checked');
+    if (selected) {
+        totalScore += parseInt(selected.value, 10);
+    }
+
+    currentQuestionIndex++;
+
+    if (currentQuestionIndex < questions.length) {
+        showQuestion(currentQuestionIndex);
+    } else {
+        questionContainer.innerHTML = "";
+        nextBtn.style.display = "none";
+        const iq = 80 + totalScore;
+        resultDiv.textContent = `Dein geschätzter IQ: ${iq}`;
+    }
 });
 
-document.getElementById("submitBtn").addEventListener("click", () => {
-    let score = 0;
-    questions.forEach((q, index) => {
-        const selected = document.querySelector(`input[name="question${index}"]:checked`);
-        if (selected) {
-            score += parseInt(selected.value, 10);
-        }
-    });
-
-    const iq = 80 + score; // Basiswert + Punkte
-    resultDiv.textContent = `Dein geschätzter IQ: ${iq}`;
-});
+showQuestion(currentQuestionIndex);
